@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QUIRK REGISTRY // Терминал вызова героев MHA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --panel: #121a30;
+    --panel-2: #0c1224;
+    --border: #243152;
+    --cyan: #00f0ff;
+    --magenta: #ff2e63;
+    --amber: #ffd60a;
+    --text: #d8e3ff;
+    --text-dim: #5e6f9c;
+    --font-display: 'Orbitron', sans-serif;
+    --font-body: 'Rajdhani', sans-serif;
+    --font-mono: 'Share Tech Mono', monospace;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+  }
+
+  body {
+    background-color: var(--bg);
+    background-image:
+      linear-gradient(rgba(0, 240, 255, 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 240, 255, 0.05) 1px, transparent 1px);
+    background-size: 42px 42px;
+    color: var(--text);
+    font-family: var(--font-body);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    position: relative;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(ellipse at center, transparent 0%, var(--bg) 80%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .app {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 760px;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 22px;
+  }
+
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 4px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+  }
+
+  h1.title {
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: clamp(1.8rem, 6vw, 2.8rem);
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    margin: 8px 0 4px;
+    background: linear-gradient(90deg, var(--cyan), #6fa8ff, var(--magenta));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .subtitle {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    letter-spacing: 2px;
+  }
+
+  .terminal {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    box-shadow: 0 0 50px rgba(0, 240, 255, 0.08), inset 0 0 80px rgba(0, 0, 0, 0.35);
+    overflow: hidden;
+  }
+
+  .terminal-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--border);
+    background: var(--panel-2);
+  }
+
+  .term-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .term-dot.cyan { background: var(--cyan); box-shadow: 0 0 8px var(--cyan); }
+  .term-dot.magenta { background: var(--magenta); box-shadow: 0 0 8px var(--magenta); }
+  .term-dot.amber { background: var(--amber); box-shadow: 0 0 8px var(--amber); }
+
+  .term-path {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+    margin-left: 4px;
+  }
+
+  .terminal-body {
+    padding: clamp(20px, 4vw, 40px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+  }
+
+  .summon-btn {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.05rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    padding: 18px 56px;
+    background: transparent;
+    border: 2px solid var(--cyan);
+    color: var(--cyan);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s, box-shadow 0.15s, transform 0.1s;
+    box-shadow: 0 0 12px rgba(0, 240, 255, 0.5), inset 0 0 12px rgba(0, 240, 255, 0.08);
+    animation: pulse-glow 2.6s ease-in-out infinite;
+  }
+
+  .summon-btn:hover:not(:disabled) {
+    background: var(--cyan);
+    color: var(--bg);
+    box-shadow: 0 0 30px var(--cyan), 0 0 60px rgba(0, 240, 255, 0.4);
+    transform: translateY(-1px);
+  }
+
+  .summon-btn:active:not(:disabled) {
+    transform: translateY(1px);
+  }
+
+  .summon-btn:disabled {
+    cursor: wait;
+    opacity: 0.55;
+    border-color: var(--text-dim);
+    color: var(--text-dim);
+    box-shadow: none;
+    animation: none;
+  }
+
+  @keyframes pulse-glow {
+    0%, 100% { box-shadow: 0 0 12px rgba(0, 240, 255, 0.5), inset 0 0 12px rgba(0, 240, 255, 0.08); }
+    50% { box-shadow: 0 0 26px rgba(0, 240, 255, 0.85), inset 0 0 18px rgba(0, 240, 255, 0.18); }
+  }
+
+  .result-area {
+    width: 100%;
+    min-height: 320px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* --- Placeholder --- */
+  .placeholder {
+    border: 1px dashed var(--border);
+    border-radius: 6px;
+    width: 100%;
+    min-height: 320px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 20px;
+  }
+
+  .placeholder p {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    line-height: 1.8;
+  }
+
+  /* --- Loader --- */
+  .loader {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+  }
+
+  .scan-ring {
+    width: 70px;
+    height: 70px;
+    border: 3px solid var(--border);
+    border-top-color: var(--cyan);
+    border-right-color: var(--magenta);
+    border-radius: 50%;
+    animation: spin 0.9s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .loader-text {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    letter-spacing: 3px;
+    color: var(--cyan);
+    text-transform: uppercase;
+    animation: flicker 1.3s infinite;
+  }
+
+  @keyframes flicker {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.35; }
+  }
+
+  /* --- Card --- */
+  .card {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+    animation: scan-reveal 0.55s ease-out;
+  }
+
+  .card.hero { border-color: var(--cyan); box-shadow: 0 0 28px rgba(0, 240, 255, 0.18); }
+  .card.villain { border-color: var(--magenta); box-shadow: 0 0 28px rgba(255, 46, 99, 0.18); }
+  .card.civilian { border-color: var(--amber); box-shadow: 0 0 28px rgba(255, 214, 10, 0.18); }
+
+  .card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, transparent 0%, rgba(0, 240, 255, 0.35) 50%, transparent 100%);
+    animation: scan-line 0.7s ease-out forwards;
+    pointer-events: none;
+  }
+
+  .card.villain::after {
+    background: linear-gradient(180deg, transparent 0%, rgba(255, 46, 99, 0.35) 50%, transparent 100%);
+  }
+
+  @keyframes scan-reveal {
+    from { opacity: 0; clip-path: inset(0 0 100% 0); }
+    to { opacity: 1; clip-path: inset(0 0 0% 0); }
+  }
+
+  @keyframes scan-line {
+    from { transform: translateY(-100%); }
+    to { transform: translateY(100%); }
+  }
+
+  .card-info {
+    padding: clamp(18px, 3vw, 28px);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 0;
+  }
+
+  .faction-badge {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 3px;
+    width: fit-content;
+  }
+
+  .card.hero .faction-badge { color: var(--cyan); border: 1px solid var(--cyan); background: rgba(0, 240, 255, 0.08); }
+  .card.villain .faction-badge { color: var(--magenta); border: 1px solid var(--magenta); background: rgba(255, 46, 99, 0.08); }
+  .card.civilian .faction-badge { color: var(--amber); border: 1px solid var(--amber); background: rgba(255, 214, 10, 0.08); }
+
+  .char-name {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(1.25rem, 4vw, 1.7rem);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin: 0;
+    line-height: 1.25;
+  }
+
+  .quirk-row {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    border-left: 3px solid var(--border);
+    padding-left: 10px;
+  }
+
+  .card.hero .quirk-row { border-left-color: var(--cyan); }
+  .card.villain .quirk-row { border-left-color: var(--magenta); }
+  .card.civilian .quirk-row { border-left-color: var(--amber); }
+
+  .quirk-label {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 3px;
+    color: var(--text-dim);
+  }
+
+  .quirk-value {
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 1.05rem;
+  }
+
+  .char-desc {
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+    line-height: 1.55;
+    color: var(--text);
+    margin: 0;
+  }
+
+  footer {
+    margin-top: 18px;
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+  }
+
+  /* --- Responsive --- */
+  @media (max-width: 600px) {
+    .summon-btn { width: 100%; padding: 18px 0; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="eyebrow">U.A. ACCESS NODE / 01</div>
+    <h1 class="title">Реестр причуд</h1>
+    <div class="subtitle">// ТЕРМИНАЛ СЛУЧАЙНОГО ВЫЗОВА ПЕРСОНАЖЕЙ MHA</div>
+  </header>
+
+  <div class="terminal">
+    <div class="terminal-header">
+      <span class="term-dot cyan"></span>
+      <span class="term-dot magenta"></span>
+      <span class="term-dot amber"></span>
+      <span class="term-path">quirk_registry.exe — база данных: 100 единиц</span>
+    </div>
+
+    <div class="terminal-body">
+      <button id="summonBtn" class="summon-btn">⚡ Призвать!</button>
+
+      <div class="result-area" id="resultArea">
+        <div class="placeholder">
+          <p>Ожидание запроса<br>Нажмите «Призвать!», чтобы извлечь случайную карточку из реестра</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>U.A. High School // Hero Database // Симуляция терминала</footer>
+</div>
+
+<script>
+  // ======================================================
+  // БАЗА ДАННЫХ ПЕРСОНАЖЕЙ (100 единиц)
+  // ======================================================
+  const characters = [
+    // --- КЛАСС 1-А ---
+    {name:"Изуку Мидория", faction:"Класс 1-А", quirk:"Один за всех", description:"Главный герой истории — добрый и упорный парень, который ломает себе кости в погоне за званием героя номер один."},
+    {name:"Кацуки Бакуго", faction:"Класс 1-А", quirk:"Взрыв", description:"Парень со взрывным характером, способный устраивать мощные взрывы потовых выделений со своих ладоней."},
+    {name:"Очако Урарака", faction:"Класс 1-А", quirk:"Невесомость", description:"Девушка из простой семьи, способная лишать предметы гравитации прикосновением подушечек пальцев."},
+    {name:"Тенья Иида", faction:"Класс 1-А", quirk:"Мотор", description:"Старосты класса 1-А с моторами в икрах ног, позволяющими развивать огромную скорость."},
+    {name:"Шото Тодороки", faction:"Класс 1-А", quirk:"Полу-Холод Полу-Жар", description:"Сын героя №1 Эндевора, управляющий льдом левой половиной тела и огнём — правой."},
+    {name:"Эйджиро Кириширима", faction:"Класс 1-А", quirk:"Затвердевание", description:"Парень с алыми шипастыми волосами, превращающий своё тело в твёрдый, как камень, материал."},
+    {name:"Денки Каминари", faction:"Класс 1-А", quirk:"Электризация", description:"Дружелюбный электрик, генерирующий разряды тока, но теряющий разум при перегрузке."},
+    {name:"Цуюй Асуи", faction:"Класс 1-А", quirk:"Лягушка", description:"Спокойная девушка с лягушачьими способностями: длинный язык, прыжки и дыхание под водой."},
+    {name:"Кьока Джиро", faction:"Класс 1-А", quirk:"Наушник", description:"Музыкантша с гибкими разъёмами-джеками в мочках ушей, излучающими звуковые волны."},
+    {name:"Момо Яойоро", faction:"Класс 1-А", quirk:"Творение", description:"Гениальная отличница, создающая неживые предметы из собственных жировых запасов."},
+    {name:"Фумикаге Токоями", faction:"Класс 1-А", quirk:"Тёмная тень", description:"Мрачный парень с головой ворона, контролирующий теневое существо, силу которого определяет уровень света."},
+    {name:"Мина Ашидо", faction:"Класс 1-А", quirk:"Кислота", description:"Энергичная девушка, выделяющая кислоту разной плотности из своего тела."},
+    {name:"Мэдзо Шоджи", faction:"Класс 1-А", quirk:"Дупликация", description:"Спокойный гигант, превращающий части тела в дополнительные руки, глаза и уши."},
+    {name:"Ханта Серо", faction:"Класс 1-А", quirk:"Лента", description:"Жизнерадостный парень, выпускающий из локтей липкую ленту для передвижения и атак."},
+    {name:"Рикидо Сато", faction:"Класс 1-А", quirk:"Сахарный рывок", description:"Силач, временно увеличивающий физическую силу после поедания сахара."},
+    {name:"Кодзи Кода", faction:"Класс 1-А", quirk:"Анимовойс", description:"Застенчивый парень, способный отдавать команды животным своим голосом."},
+    {name:"Юга Аояма", faction:"Класс 1-А", quirk:"Пупочный лазер", description:"Самопровозглашённый «блестящий» герой, стреляющий лазером из пупка."},
+    {name:"Тору Хагакуре", faction:"Класс 1-А", quirk:"Невидимость", description:"Девушка с искрящимся характером и абсолютно прозрачным телом."},
+    {name:"Маширао Одзиро", faction:"Класс 1-А", quirk:"Хвост", description:"Скромный парень с мощным мускулистым хвостом для атак и удержания равновесия."},
+    {name:"Минору Минета", faction:"Класс 1-А", quirk:"Выскочка", description:"Низкорослый парень, выдёргивающий со своей головы липкие шарики-присоски."},
+
+    // --- КЛАСС 1-Б ---
+    {name:"Нейто Монома", faction:"Класс 1-Б", quirk:"Копирование", description:"Заносчивый отличник, способный временно копировать причуду другого человека через прикосновение."},
+    {name:"Ицука Кендо", faction:"Класс 1-Б", quirk:"Большой кулак", description:"Надёжная старостa класса 1-Б, увеличивающая размер и силу своих кулаков."},
+    {name:"Тецутецу Тецутецу", faction:"Класс 1-Б", quirk:"Сталь", description:"Горячий парень, превращающий своё тело в прочную сталь."},
+    {name:"Йосецу Авасэ", faction:"Класс 1-Б", quirk:"Сварка", description:"Скромный парень, способный сваривать предметы и собственное тело прикосновением."},
+    {name:"Пони Цуноторо", faction:"Класс 1-Б", quirk:"Рог-катапульта", description:"Энергичная студентка по обмену, выращивающая на голове рога, которые можно отламывать как снаряды."},
+    {name:"Дзюдзо Хонэнуки", faction:"Класс 1-Б", quirk:"Размягчение", description:"Спокойный парень, способный размягчать любые неживые объекты прикосновением."},
+    {name:"Шихай Куроиро", faction:"Класс 1-Б", quirk:"Чёрный", description:"Молчаливый парень, сливающийся с темнотой и становящийся невидимым в тени."},
+    {name:"Рейко Янаги", faction:"Класс 1-Б", quirk:"Полтергейст", description:"Тихая девушка, способная двигать предметы силой мысли в ограниченном радиусе."},
+    {name:"Сэцуна Токагэ", faction:"Класс 1-Б", quirk:"Разделение", description:"Девушка, способная отделять части своего тела, которые продолжают двигаться самостоятельно."},
+    {name:"Ибара Шиозаки", faction:"Класс 1-Б", quirk:"Лозы", description:"Религиозная девушка, чьи волосы превратились в колючие шипастые лозы."},
+    {name:"Юи Кодаи", faction:"Класс 1-Б", quirk:"Размер", description:"Тихая девушка, способная изменять размер неживых объектов."},
+    {name:"Киноко Комори", faction:"Класс 1-Б", quirk:"Грибы", description:"Девушка, выращивающая на своём теле споры грибов с разными эффектами."},
+    {name:"Тогару Камакири", faction:"Класс 1-Б", quirk:"Острые зубы", description:"Парень с острыми, как лезвия, зубами, которые он использует как метательное оружие."},
+    {name:"Манга Фукидаши", faction:"Класс 1-Б", quirk:"Комикс", description:"Парень, создающий материальные облака с текстом комикса — звуками и символами."},
+    {name:"Сэн Кайбара", faction:"Класс 1-Б", quirk:"Панцирь", description:"Парень с твёрдым, как камень, панцирем на спине."},
+    {name:"Нирэнгэки Шода", faction:"Класс 1-Б", quirk:"Двойная детонация", description:"Парень, генерирующий взрывную волну хлопком в ладони."},
+    {name:"Дзюрота Шишида", faction:"Класс 1-Б", quirk:"Зверь", description:"Парень, превращающийся в массивного волкоподобного зверя."},
+
+    // --- ПРЕПОДАВАТЕЛИ И НАСТАВНИКИ ---
+    {name:"Тоситоми Яги (Олл Майт)", faction:"Про-герой", quirk:"Один за всех", description:"Бывший герой №1 и символ мира, передавший свою силу Мидории и продолжающий обучать новое поколение."},
+    {name:"Шота Айзава", faction:"Про-герой", quirk:"Стирание", description:"Хладнокровный учитель класса 1-А, способный временно отключать чужие причуды одним взглядом."},
+    {name:"Хизаши Ямада", faction:"Про-герой", quirk:"Голос", description:"Громкоголосый учитель английского, превращающий звуковые волны в мощное оружие."},
+    {name:"Немури Каяма", faction:"Про-герой", quirk:"Сомнамбула", description:"Эффектная учительница, усыпляющая противников феромонами через открытую кожу."},
+    {name:"Сэкидзиро Кан", faction:"Про-герой", quirk:"Контроль крови", description:"Куратор класса 1-Б, манипулирующий собственной кровью как гибким оружием."},
+    {name:"Кэн Исияма", faction:"Про-герой", quirk:"Цемент", description:"Учитель строительной науки, превращающий землю под собой в цемент любой формы."},
+    {name:"Эктоплазм", faction:"Про-герой", quirk:"Клон", description:"Учитель, создающий множество собственных копий из выдыхаемого воздуха."},
+    {name:"Чийо Шудзенджи", faction:"Про-герой", quirk:"Лечение", description:"Школьный врач Юэй, ускоряющая регенерацию ран целебным поцелуем за счёт собственной энергии пациента."},
+    {name:"Тринадцать", faction:"Про-герой", quirk:"Чёрная дыра", description:"Учитель спасательных операций, создающий на кончиках пальцев всасывающий вихрь."},
+    {name:"Снайп", faction:"Про-герой", quirk:"Хоминг", description:"Учитель-стрелок в плаще, способный направлять выпущенные пули по нужной траектории."},
+    {name:"Канаме Сакамата (Power Loader)", faction:"Про-герой", quirk:"Механические руки", description:"Глава кафедры разработки поддерживающих предметов, использующий механический экзоскелет для работы в лаборатории."},
+    {name:"Нэдзу", faction:"Про-герой", quirk:"Высокие способности", description:"Директор Юэй — разумное животное с интеллектом, превосходящим человеческий, и мастер стратегии."},
+    {name:"Сорахико Торино", faction:"Про-герой", quirk:"Джет", description:"Пожилой наставник Олл Майта, использующий реактивные струи на ногах для скоростных атак."},
+
+    // --- ПРО-ГЕРОИ ---
+    {name:"Энджи Тодороки (Эндевор)", faction:"Про-герой", quirk:"Адское пламя", description:"Суровый герой №1, управляющий мощнейшим огнём и отец Шото Тодороки."},
+    {name:"Кейги Такаги (Хоукс)", faction:"Про-герой", quirk:"Свирепые крылья", description:"Молодой герой с гигантскими перьевыми крыльями, способными резать и переносить предметы."},
+    {name:"Руми Усагияма (Мирко)", faction:"Про-герой", quirk:"Кролик", description:"Бескомпромиссная героиня-кроль с невероятной силой и скоростью ног."},
+    {name:"Цунаги Хакамада (Бест Дженист)", faction:"Про-герой", quirk:"Мастер волокон", description:"Элегантный герой, манипулирующий тканью одежды любого человека как оружием."},
+    {name:"Синья Камихара (Эджшот)", faction:"Про-герой", quirk:"Складывание", description:"Герой-ниндзя, способный сжимать своё тело до толщины листа бумаги для уклонения и атак."},
+    {name:"Ю Такеяма (Мт. Леди)", faction:"Про-герой", quirk:"Гигантизация", description:"Героиня, способная увеличивать собственный рост до размеров высотного здания."},
+    {name:"Камуи Кидзоку", faction:"Про-герой", quirk:"Дерево", description:"Герой, выращивающий и контролирующий деревянные конечности собственного тела."},
+    {name:"Тайширо Тоёмицу (Фэт Гам)", faction:"Про-герой", quirk:"Поглощение жира", description:"Полный герой, использующий жировую прослойку, чтобы смягчать удары и усиливать подопечных."},
+    {name:"Тамаки Амадзики (Сунитер)", faction:"Про-герой", quirk:"Манифест", description:"Застенчивый герой, временно приобретающий свойства любой съеденной пищи."},
+    {name:"Нэдзире Хадо", faction:"Про-герой", quirk:"Волновое движение", description:"Энергичная героиня, выпускающая разрушительные волны энергии из конечностей."},
+    {name:"Мирио Тогата (Лемиллион)", faction:"Про-герой", quirk:"Проницание", description:"Жизнерадостный герой, способный проходить сквозь любые объекты — на время утративший эту силу."},
+    {name:"Рюкю", faction:"Про-герой", quirk:"Дракон", description:"Спокойная героиня, способная превращаться в огромного дракона по собственному желанию."},
+    {name:"Гэнг Орка", faction:"Про-герой", quirk:"Косатка", description:"Герой с чертами косатки — огромной физической силой и звуковой эхолокацией."},
+    {name:"Эми Фукукадо (Мисс Джок)", faction:"Про-герой", quirk:"Вспышка", description:"Весёлая героиня, заставляющая людей вокруг смеяться до изнеможения."},
+    {name:"Бэкдрафт", faction:"Про-герой", quirk:"Пожаротушение", description:"Герой, распыляющий из тела пенное вещество для тушения пожаров."},
+    {name:"Death Arms", faction:"Про-герой", quirk:"Силач", description:"Мускулистый герой с нечеловеческой физической силой рук."},
+    {name:"Manual", faction:"Про-герой", quirk:"Реверс", description:"Опытный герой-наставник, способный обращать направление движения объектов."},
+    {name:"Мандалай", faction:"Про-герой", quirk:"Телепатия", description:"Героиня из команды «Диких кошечек», способная связываться с разумом других людей."},
+    {name:"Пикси-Боб", faction:"Про-герой", quirk:"Земляной поток", description:"Героиня, создающая глиняных существ из земли силой собственного воображения."},
+    {name:"Рэгдолл", faction:"Про-герой", quirk:"Поиск", description:"Героиня, способная отслеживать местоположение и параметры до сотни людей одновременно."},
+    {name:"Тигр", faction:"Про-герой", quirk:"Резина", description:"Герой-наставник, чьё тело растягивается как резина для захватов и амортизации ударов."},
+    {name:"Native", faction:"Про-герой", quirk:"Крылья", description:"Герой с крыльями на спине, способный летать и переносить людей в безопасное место."},
+    {name:"Centipeder", faction:"Про-герой", quirk:"Многоножка", description:"Охранник тюрьмы Тартарус с многосуставчатым телом, как у гигантской многоножки."},
+
+    // --- СТУДЕНТЫ ДРУГИХ ШКОЛ И ГРАЖДАНСКИЕ ---
+    {name:"Хитоши Шинсо", faction:"Студент Юэй", quirk:"Гипноз", description:"Целеустремлённый парень, способный гипнотизировать любого, кто ответит на его вопрос."},
+    {name:"Инаса Йоараши", faction:"Студент Шикецу", quirk:"Порыв ветра", description:"Энергичный гигант, генерирующий мощные порывы ветра ладонями и ступнями."},
+    {name:"Камие Уцуши", faction:"Студентка Кетсубутсу", quirk:"Мираж", description:"Беззаботная девушка, создающая реалистичные иллюзии из собственной слизи."},
+    {name:"Кота Идзуми", faction:"Гражданский", quirk:"Нет причуды", description:"Мальчик, потерявший родителей по вине злодея и долго не доверявший героям."},
+    {name:"Мелисса Шилд", faction:"Гражданская", quirk:"Нет причуды", description:"Гениальная юная изобретательница, создательница экспериментального костюма для Олл Майта."},
+
+    // --- ЗЛОДЕИ ---
+    {name:"Тенко Шигараки (Томура Шигараки)", faction:"Злодей", quirk:"Распад", description:"Лидер Лиги злодеев, разрушающий на молекулярном уровне всё, что касается всеми пальцами."},
+    {name:"Тоя Тодороки (Даби)", faction:"Злодей", quirk:"Кремация", description:"Старший сын Эндевора, владеющий синим пламенем, которое обжигает даже его самого."},
+    {name:"Химико Тога", faction:"Злодей", quirk:"Превращение", description:"Девушка, принимающая внешность других людей после того, как выпьет их крови."},
+    {name:"Дзин Бубайгавара (Твайс)", faction:"Злодей", quirk:"Дубль", description:"Злодей, способный создавать идентичных клонов самого себя и других людей."},
+    {name:"Атсухиро Сако (Мистер Компресс)", faction:"Злодей", quirk:"Сжатие", description:"Элегантный иллюзионист, сжимающий любые объекты и людей в крошечные шарики."},
+    {name:"Спиннер", faction:"Злодей", quirk:"Геккон", description:"Злодей с рептильными чертами, преданный идеям Хироя Стейна."},
+    {name:"Магне", faction:"Злодей", quirk:"Магнетизм", description:"Злодейка, намагничивающая собственное тело для притягивания и отталкивания металла."},
+    {name:"Курогири", faction:"Злодей", quirk:"Врата деформации", description:"Туманообразный злодей, создающий порталы для мгновенной телепортации союзников."},
+    {name:"Всё для одного", faction:"Злодей", quirk:"Передача причуд", description:"Древний злодей, способный отбирать и передавать причуды — давний враг Олл Майта."},
+    {name:"Маскьюлар", faction:"Злодей", quirk:"Усиление мышц", description:"Безумный громила, способный многократно увеличивать массу своих мышц."},
+    {name:"Мунфиш", faction:"Злодей", quirk:"Зубы-лезвия", description:"Злодей с акульей пастью, способный удлинять и вращать зубы, как пилу."},
+    {name:"Кай Чисаки (Овэрхол)", faction:"Злодей", quirk:"Овэрхол", description:"Опрятный лидер якудза, способный разбирать и пересобирать любую материю на атомы."},
+    {name:"Гигантомахия", faction:"Злодей", quirk:"Гигантизация", description:"Огромный телохранитель Всё для одного, чья сила растёт пропорционально его размеру."},
+    {name:"Рикия Йоцубаси (Re-Destro)", faction:"Злодей", quirk:"Стресс", description:"Глава корпорации и Армии освобождения, чья физическая сила растёт от уровня стресса."},
+    {name:"Гетен", faction:"Злодей", quirk:"Обморожение", description:"Спокойная злодейка из Армии освобождения, замораживающая всё вокруг себя."},
+    {name:"Скептик", faction:"Злодей", quirk:"Горловой микрофон", description:"Злодей-стример, превращающий собственный голос в инструмент информационной войны."},
+    {name:"Слайдин Гоу", faction:"Злодей", quirk:"Скольжение", description:"Злодей, способный скользить по любым поверхностям, как по льду."},
+    {name:"Чизомэ Акагуро (Стейн)", faction:"Злодей", quirk:"Кровожажда", description:"Фанатичный убийца героев, парализующий жертв при контакте с их кровью."},
+    {name:"Девять", faction:"Злодей", quirk:"Множественные причуды", description:"Смертельно больной злодей, владеющий сразу несколькими украденными причудами."},
+    {name:"Дайдоро Сакаки", faction:"Злодей", quirk:"Разложение", description:"Член клана Шие Хассайкай, разлагающий органические материалы прикосновением."},
+    {name:"Дарума Удзико (Гараки)", faction:"Злодей", quirk:"Нет причуды", description:"Старый учёный без причуды, создающий искусственных воинов Номов по заказу Всё для одного."},
+    {name:"Высокоинтеллектуальный Ному", faction:"Злодей", quirk:"Сращённые причуды", description:"Гуманоидное оружие, созданное путём сращивания нескольких причуд в одном теле."}
+  ];
+
+  // ======================================================
+  // ЛОГИКА ПРИЛОЖЕНИЯ
+  // ======================================================
+  const summonBtn = document.getElementById('summonBtn');
+  const resultArea = document.getElementById('resultArea');
+  let isLoading = false;
+
+  // Определяем "тему" карточки по фракции персонажа
+  function getTheme(faction) {
+    if (faction.includes('Злодей')) return 'villain';
+    if (faction.includes('Гражданск')) return 'civilian';
+    return 'hero';
+  }
+
+  function setButtonState(loading) {
+    isLoading = loading;
+    summonBtn.disabled = loading;
+    summonBtn.textContent = loading ? 'СКАНИРОВАНИЕ...' : '⚡ Призвать!';
+  }
+
+  function renderLoader() {
+    resultArea.innerHTML = `
+      <div class="loader">
+        <div class="scan-ring"></div>
+        <p class="loader-text">Загрузка данных из реестра...</p>
+      </div>
+    `;
+  }
+
+  function renderCard(character, theme) {
+    resultArea.innerHTML = `
+      <div class="card ${theme}">
+        <div class="card-info">
+          <span class="faction-badge">${character.faction}</span>
+          <h2 class="char-name">${character.name}</h2>
+          <div class="quirk-row">
+            <span class="quirk-label">ПРИЧУДА</span>
+            <span class="quirk-value">${character.quirk}</span>
+          </div>
+          <p class="char-desc">${character.description}</p>
+        </div>
+      </div>
+    `;
+  }
+
+  summonBtn.addEventListener('click', () => {
+    if (isLoading) return;
+
+    setButtonState(true);
+    renderLoader();
+
+    const character = characters[Math.floor(Math.random() * characters.length)];
+    const theme = getTheme(character.faction);
+
+    // Небольшая задержка для эффекта "сканирования реестра"
+    setTimeout(() => {
+      renderCard(character, theme);
+      setButtonState(false);
+    }, 500);
+  });
+</script>
+</body>
+</html>
